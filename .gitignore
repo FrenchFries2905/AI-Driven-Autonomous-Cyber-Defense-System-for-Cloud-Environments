@@ -1,0 +1,80 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# --- Virtual environments ---
+venv/
+.venv/
+env/
+ENV/
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# --- Environment / secrets ---
+.env
+.env.*
+*.pem
+*.key
+secrets.yaml
+config/local_settings.py
+
+# --- Models & artifacts ---
+*.pkl
+*.joblib
+*.h5
+*.onnx
+models/*.pkl
+models/*.joblib
+!models/.gitkeep
+
+# --- Data ---
+data/raw/
+data/processed/
+*.csv
+*.txt
+!requirements.txt
+!README.txt
+NSL-KDD/
+
+# --- Logs & evidence store ---
+logs/
+*.log
+evidence/*.json
+evidence_log.db
+*.sqlite3
+*.db
+
+# --- FastAPI / Uvicorn ---
+*.pid
+
+# --- Streamlit ---
+.streamlit/secrets.toml
+
+# --- Docker ---
+*.env.docker
+docker-compose.override.yml
+
+# --- IDE / editor ---
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# --- Testing / coverage ---
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# --- OS ---
+Thumbs.db
