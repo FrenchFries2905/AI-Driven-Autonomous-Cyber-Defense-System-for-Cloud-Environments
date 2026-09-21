@@ -1,0 +1,29 @@
+policies:
+  Normal:
+    low: none
+    medium: none
+    high: none
+
+  Probe:
+    low: trigger_alert
+    medium: trigger_alert
+    high: block_ip
+
+  DoS:
+    low: trigger_alert
+    medium: block_ip
+    high: isolate_service
+
+  R2L:
+    low: trigger_alert
+    medium: block_ip
+    high: isolate_service
+
+  U2R:
+    low: trigger_alert
+    medium: isolate_service
+    high: restart_instance
+
+risk_thresholds:
+  high: 0.90
+  medium: 0.70
