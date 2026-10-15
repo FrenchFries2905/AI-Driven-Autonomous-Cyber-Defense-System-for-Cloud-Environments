@@ -85,6 +85,46 @@ class ThreatDetectionPipeline:
             "latency_ms": round(latency_ms, 2),
         }
 
+    def predict_batch(self, samples: list) -> list:
+        """
+        Classify many samples at once. Preprocessing and prediction are vectorized
+        (done on whole columns instead of one row at a time), which is far faster
+        than calling predict() in a loop. `latency_ms` is the per-sample share of
+        the batch time.
+        """
+        if not samples:
+            return []
+        start = time.perf_counter()
+
+        df = pd.DataFrame(samples)
+        for col in self.feature_cols:
+            if col not in df.columns:
+                df[col] = 0
+
+        for col in CATEGORICAL_COLS:
+            le = self.encoders[col]
+            known = set(le.classes_)
+            fallback = "unknown" if "unknown" in known else le.classes_[0]
+            df[col] = le.transform(df[col].where(df[col].isin(known), fallback))
+
+        df = df[self.feature_cols]
+        df[self.feature_cols] = self.scaler.transform(df[self.feature_cols])
+
+        proba = self.model.predict_proba(df)
+        classes = self.model.classes_
+        best = np.argmax(proba, axis=1)
+        per_sample_ms = round((time.perf_counter() - start) * 1000 / len(samples), 3)
+
+        return [
+            {
+                "predicted_class": classes[b],
+                "confidence": round(float(row[b]), 4),
+                "class_probabilities": {c: round(float(p), 4) for c, p in zip(classes, row)},
+                "latency_ms": per_sample_ms,
+            }
+            for row, b in zip(proba, best)
+        ]
+
 
 if __name__ == "__main__":
     # Quick manual test with a made-up "normal-looking" sample
