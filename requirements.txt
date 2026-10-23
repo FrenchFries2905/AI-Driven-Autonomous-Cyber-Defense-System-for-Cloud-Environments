@@ -1,0 +1,13 @@
+# Template: run  python scripts/make_requirements.py  to pin these to YOUR versions.
+fastapi
+uvicorn
+pydantic
+pandas
+numpy
+scikit-learn
+joblib
+pyyaml
+streamlit
+requests
+pytest
+httpx

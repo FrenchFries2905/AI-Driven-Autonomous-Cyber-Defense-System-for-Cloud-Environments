@@ -6,6 +6,7 @@ Run from the repo root (with the API already running):
     streamlit run dashboard/app.py
 """
 
+import os
 from datetime import datetime
 
 import streamlit as st
@@ -20,7 +21,8 @@ st.title("Autonomous Threat Detection and Mitigation")
 # ---------------------------------------------------------------- sidebar
 with st.sidebar:
     st.header("Settings")
-    api_url = st.text_input("API URL", value="http://127.0.0.1:8000")
+    # In Docker, compose sets API_URL=http://api:8000; locally it falls back to localhost
+    api_url = st.text_input("API URL", value=os.environ.get("API_URL", "http://127.0.0.1:8000"))
     refresh_s = st.slider("Refresh every (seconds)", min_value=2, max_value=30, value=5)
     paused = st.toggle("Pause auto-refresh", value=False)
     event_limit = st.slider("Events to load", min_value=20, max_value=500, value=200, step=20)

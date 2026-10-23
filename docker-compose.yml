@@ -1,0 +1,42 @@
+# Starts the whole system:   docker compose up --build
+# API:        http://localhost:8000/docs
+# Dashboard:  http://localhost:8501
+
+name: cloud-threat-detection
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+      args:
+        PYTHON_VERSION: ${PYTHON_VERSION:-3.12}
+    image: threat-detection-api:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      # Trained model files from your machine, read-only
+      - ./models:/app/models:ro
+      # Evidence log kept in a Docker-managed volume so it survives restarts
+      - evidence_data:/app/evidence
+    restart: unless-stopped
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: docker/dashboard/Dockerfile
+      args:
+        PYTHON_VERSION: ${PYTHON_VERSION:-3.12}
+    image: threat-detection-dashboard:latest
+    environment:
+      # Inside the compose network the API is reachable by its service name
+      API_URL: http://api:8000
+    ports:
+      - "8501:8501"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  evidence_data:

@@ -1,0 +1,53 @@
+# Attack lab. Use it together with the main compose file:
+#   $env:COMPOSE_FILE = "docker-compose.yml;docker-compose.lab.yml"
+#   docker compose up --build
+#
+# SAFETY: the attacker only targets the "victim" container on this compose network.
+# Never point these tools at any other machine or network.
+
+services:
+  # The target: a plain web server, reachable only inside the lab
+  victim:
+    image: nginx:alpine
+    restart: unless-stopped
+
+  # The sensor shares the victim's network, so it sees all traffic to and from the victim
+  sensor:
+    build:
+      context: ./lab/sensor
+    network_mode: "service:victim"
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+    environment:
+      API_URL: http://api:8000
+      SENSOR_IFACE: eth0
+      RECORD_CSV: /data/flows.csv
+      VERBOSE: ${SENSOR_VERBOSE:-0}
+      DRY_RUN: ${SENSOR_DRY_RUN:-0}
+    volumes:
+      - ./lab/data:/data
+    depends_on:
+      api:
+        condition: service_healthy
+      victim:
+        condition: service_started
+    restart: unless-stopped
+
+  # Ordinary visitors: one web request every 0.5 to 2.5 seconds
+  benign:
+    image: curlimages/curl:latest
+    entrypoint: ["sh", "-c", "tr -d '\\r' < /benign.sh | sh"]
+    volumes:
+      - ./lab/benign.sh:/benign.sh:ro
+    depends_on:
+      - victim
+    restart: unless-stopped
+
+  # The attacker: sits idle until you run an attack with "docker compose exec"
+  attacker:
+    build:
+      context: ./lab/attacker
+    command: ["sleep", "infinity"]
+    depends_on:
+      - victim
