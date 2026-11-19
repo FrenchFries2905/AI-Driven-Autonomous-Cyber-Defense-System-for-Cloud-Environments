@@ -33,6 +33,7 @@ class ThreatResponseOrchestrator:
 
         result["source_ip"] = source_ip
         result["mttd_ms"] = prediction["latency_ms"]  # detection time = inference latency
+        result["model_version"] = getattr(self.pipeline, "model_version", None)
         result["class_probabilities"] = prediction["class_probabilities"]
         result["event_id"] = self.log.record_event(result)
         return result

@@ -15,6 +15,8 @@ import joblib
 import numpy as np
 import pandas as pd
 
+from src.model.registry import resolve_live_model
+
 ARTIFACT_DIR = "models"
 
 CATEGORICAL_COLS = ["protocol_type", "service", "flag"]
@@ -27,7 +29,9 @@ class ThreatDetectionPipeline:
     """
 
     def __init__(self, artifact_dir: str = ARTIFACT_DIR):
-        self.model = joblib.load(os.path.join(artifact_dir, "rf_classifier.joblib"))
+        # which model file is live is decided by models/live.json (see src/model/registry.py)
+        model_path, self.model_version = resolve_live_model(artifact_dir)
+        self.model = joblib.load(model_path)
         self.model.n_jobs = 1  # avoid multiprocessing overhead per single-sample call
 
         self.encoders = joblib.load(os.path.join(artifact_dir, "encoders.joblib"))

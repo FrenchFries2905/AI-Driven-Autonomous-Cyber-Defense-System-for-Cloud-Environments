@@ -49,5 +49,7 @@ services:
     build:
       context: ./lab/attacker
     command: ["sleep", "infinity"]
+    volumes:
+      - ./lab/data:/data
     depends_on:
       - victim

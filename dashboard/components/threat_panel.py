@@ -56,6 +56,7 @@ def render(events: list, metrics: dict) -> None:
         "Target": df["target"],
         "Result": df["success"].map({1: "OK", 0: "FAILED"}),
         "MTTR (ms)": df["mttr_ms"].round(1),
+        "Model": df["model_version"].fillna("-") if "model_version" in df.columns else "-",
         "Reasoning": df["reasoning"],
     }).head(LOG_ROWS)
     st.dataframe(table, hide_index=True)

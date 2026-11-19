@@ -30,7 +30,8 @@ CREATE TABLE IF NOT EXISTS events (
     mttd_ms         REAL    NOT NULL,
     mttr_ms         REAL    NOT NULL,
     reasoning       TEXT,
-    detail          TEXT
+    detail          TEXT,
+    model_version   TEXT
 );
 
 CREATE TABLE IF NOT EXISTS health_checks (
@@ -64,6 +65,10 @@ class EvidenceLog:
         self._lock = threading.Lock()
         with self._lock:
             self._conn.executescript(SCHEMA)
+            # databases created before model versions existed get the new column
+            cols = [r[1] for r in self._conn.execute("PRAGMA table_info(events)")]
+            if "model_version" not in cols:
+                self._conn.execute("ALTER TABLE events ADD COLUMN model_version TEXT")
             self._conn.commit()
 
     def record_event(self, record: dict) -> int:
@@ -78,8 +83,8 @@ class EvidenceLog:
             cur = self._conn.execute(
                 """INSERT INTO events
                    (timestamp_utc, source_ip, predicted_class, confidence, risk_level,
-                    action, target, success, mttd_ms, mttr_ms, reasoning, detail)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    action, target, success, mttd_ms, mttr_ms, reasoning, detail, model_version)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (
                     _now(),
                     record.get("source_ip"),
@@ -93,6 +98,7 @@ class EvidenceLog:
                     float(record["mttr_ms"]),
                     record.get("reasoning"),
                     outcome.get("detail"),
+                    record.get("model_version"),
                 ),
             )
             self._conn.commit()
